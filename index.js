@@ -12,13 +12,13 @@ const RideModel = require('./models/Ride');
 const app = express();
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/madbe', {
+    await mongoose.connect('mongoURI=mongodb+srv://Safyan:qwertyasdf@cluster0-f9smh.mongodb.net/natrous?retryWrites=true&w=majority', {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
@@ -31,8 +31,8 @@ const connectDB = async () => {
 
 connectDB();
 
-app.get('/ride/:distance/:startLatLng/:endLatlng',catchAsync(async (req,res)=>{
-  
+app.get('/ride/:distance/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
+
 
   const { distance, startLatLng, endLatlng } = req.params;
 
@@ -41,7 +41,7 @@ app.get('/ride/:distance/:startLatLng/:endLatlng',catchAsync(async (req,res)=>{
   const [startLat, startLng] = startLatLng.split(',');
   const [endLat, endLng] = endLatlng.split(',');
 
-  if (!startLat || !startLng || !endLat || !endLng ) {
+  if (!startLat || !startLng || !endLat || !endLng) {
     next(
       new AppError(
         'Please provide latitutr and longitude in the format lat,lng.',
@@ -55,7 +55,7 @@ app.get('/ride/:distance/:startLatLng/:endLatlng',catchAsync(async (req,res)=>{
   });
   // 28.669786300050873, 77.22798035964927
 
-  console.log(drives.length)
+  console.log(drives.length);
   res.status(200).json({
     status: 'success',
     results: drives.length,
@@ -66,30 +66,30 @@ app.get('/ride/:distance/:startLatLng/:endLatlng',catchAsync(async (req,res)=>{
 })
 );
 
-app.post('/drive',catchAsync(async (req,res)=>{
+app.post('/drive', catchAsync(async (req, res) => {
 
-    const {startPoint,endPoint}=req.body;
+  const { startPoint, endPoint } = req.body;
 
-    const response = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${startPoint.coordinates[1]},${startPoint.coordinates[0]}&destination=${endPoint.coordinates[1]},${endPoint.coordinates[0]}&key=AIzaSyDVqR4uEmfJa-0jmqKjsariW3kJXbQh2Hk`)
+  const response = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${startPoint.coordinates[1]},${startPoint.coordinates[0]}&destination=${endPoint.coordinates[1]},${endPoint.coordinates[0]}&key=AIzaSyDVqR4uEmfJa-0jmqKjsariW3kJXbQh2Hk`);
 
-    const midPointIndex=Math.ceil((response.data.routes[0].legs[0].steps.length)/2);
-    const midPoint=response.data.routes[0].legs[0].steps[midPointIndex].end_location;
+  const midPointIndex = Math.ceil((response.data.routes[0].legs[0].steps.length) / 2);
+  const midPoint = response.data.routes[0].legs[0].steps[midPointIndex].end_location;
 
-    const diameter = (response.data.routes[0].legs[0].distance.value)/2;
-    const route=response.data.routes[0];
+  const diameter = (response.data.routes[0].legs[0].distance.value) / 2;
+  const route = response.data.routes[0];
 
-    const drive = await DriveModel.create({
-      startPoint,
-      endPoint,
-      midPoint:{
-        type:"Point",
-        coordinates:[midPoint.lng,midPoint.lat]
-      },
-      route,
-      diameter
-      }
-    );
-    console.log(drive.length)
+  const drive = await DriveModel.create({
+    startPoint,
+    endPoint,
+    midPoint: {
+      type: "Point",
+      coordinates: [midPoint.lng, midPoint.lat]
+    },
+    route,
+    diameter
+  }
+  );
+  console.log(drive.length);
   res.status(200).send('successfuly added drive');
 }));
 
