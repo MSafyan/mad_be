@@ -90,7 +90,7 @@ app.post('/drive', catchAsync(async (req, res) => {
   }
   );
   console.log(drive.length);
-  res.status(200).send('successfuly added drive');
+  res.status(200).json({ message: 'successfuly added drive' });
 }));
 
 /* const PORT = process.env.PORT || 3000;
