@@ -55,8 +55,7 @@ const driveSchema = new mongoose.Schema(
   }
 );
 
-driveSchema.index({startPoint: '2dsphere'});
 driveSchema.index({midPoint: '2dsphere'});
-driveSchema.index({endPoint: '2dsphere'});
 
 module.exports = mongoose.model('Drive', driveSchema);
+
