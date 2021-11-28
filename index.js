@@ -15,10 +15,12 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true}))
 app.use(bodyParser.json());
 
+// mongoURI=mongodb+srv://Safyan:qwertyasdf@cluster0-f9smh.mongodb.net/natrous?retryWrites=true&w=majority
+// mongodb://localhost:27017/madbe
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/madbe', {
+    await mongoose.connect('mongoURI=mongodb+srv://Safyan:qwertyasdf@cluster0-f9smh.mongodb.net/madbe?retryWrites=true&w=majority', {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
