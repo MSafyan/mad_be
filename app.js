@@ -93,10 +93,10 @@ app.post('/drive', catchAsync(async (req, res) => {
   res.status(200).send('successfuly added drive');
 }));
 
-const PORT = process.env.PORT || 3000;
+/* const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Running at ${PORT}`);
 });
-
+ */
 module.exports = app;
