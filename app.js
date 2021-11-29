@@ -69,15 +69,20 @@ app.get('/ride/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
   for (let i = 0; i < allDrives.length; i++) {
     const drive = allDrives[i];
     if (drive) {
+      let startIsIn = false;
       for (let j = 0; j < drive.points.length; j++) {
         const element = drive.points[j];
-        console.log(Math.abs(element.lat - startLat) < range, Math.abs(element.lng - startLng) < range);
-        if (Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range) {
+        if (!startIsIn) {
+          if (Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range) {
+            startIsIn = true;
+            continue;
+          }
+        }
+        else if (Math.abs(element.lat - endLat) < range && Math.abs(element.lng - endLng) < range) {
           matchDrive[matchDrive.length] = drive;
           break;
         }
       }
-
     }
 
   }
