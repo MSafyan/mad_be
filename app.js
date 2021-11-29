@@ -44,7 +44,7 @@ app.get('/ride/:distance/:startLatLng/:endLatlng', catchAsync(async (req, res) =
   if (!startLat || !startLng || !endLat || !endLng) {
     next(
       new AppError(
-        'Please provide latitutr and longitude in the format lat,lng.',
+        'Please provide latitude and longitude in the format lat,lng.',
         400
       )
     );
