@@ -65,8 +65,8 @@ app.get('/ride/:time/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
     maxLng: { $gt: endLng },
     minLng: { $lt: endLng },
   });
-
-  let dateTime = new Date(time);
+  console.log(typeof time);
+  let dateTime = new Date(new Number(time));
   for (let i = 0; i < allDrives.length; i++) {
     const drive = allDrives[i];
     if (drive) {
@@ -75,12 +75,13 @@ app.get('/ride/:time/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
       for (let j = 0; j < drive.points.length; j++) {
         const element = drive.points[j];
         if (!startIsIn) {
+          console.log(element.Time, dateTime);
           if (element.Time > dateTime)
             continue;
           if (Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range) {
             startIsIn = true;
             driveDetails = {
-              time: element.time,
+              time: element.Time,
               startPoint: [element.lat, element.lng],
             };
             continue;
