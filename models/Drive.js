@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const {Point} = require('mongoose-geojson-schema');
+const { Point } = require('mongoose-geojson-schema');
 
 const pointSchema = new mongoose.Schema({
   type: {
@@ -29,53 +29,25 @@ const driveSchema = new mongoose.Schema(
     },
     startPoint: {
       type: {
-        type: String,  
-        enum: ['Point'],  
-        default:'Point'
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
       },
       coordinates: [Number]
     },
     endPoint: {
       type: {
-        type: String,  
-        enum: ['Point'],  
-        default:'Point'
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
       },
       coordinates: [Number]
     },
-    midPoint:{
-      type: {
-        type: String, 
-        enum: ['Point'], 
-        default:'Point'
-      },
-      coordinates: [Number]
-    },
-    maxPoint:{
-      type: {
-        type: String, 
-        enum: ['Point'], 
-        default:'Point'
-      },
-      coordinates: [Number]
-    },
-    minPoint:{
-      type: {
-        type: String, 
-        enum: ['Point'], 
-        default:'Point'
-      },
-      coordinates: [Number]
-    },
-    lineString:{
-      type: {
-        type: String, 
-        enum: ['LineString'], 
-        default:'LineString'
-      },
-      coordinates: [[Number]]
-    },
-    route:{},
+    maxLat: { type: Number },
+    minLat: { type: Number },
+    maxLng: { type: Number },
+    minLng: { type: Number },
+    points: [],
     // polygon:{
     //   type: {
     //     type: String,
@@ -90,10 +62,6 @@ const driveSchema = new mongoose.Schema(
   }
 );
 
-driveSchema.index({midPoint: '2dsphere'});
-driveSchema.index({maxPoint: '2dsphere'});
-driveSchema.index({minPoint: '2dsphere'});
-driveSchema.index({lineString: '2dsphere'});
 // driveSchema.index({polygon: '2dsphere'});
 
 module.exports = mongoose.model('Drive', driveSchema);

@@ -16,6 +16,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
+const range = 0.009009009009009;
+
 const connectDB = async () => {
   try {
     await mongoose.connect('mongoURI=mongodb+srv://Safyan:qwertyasdf@cluster0-f9smh.mongodb.net/natrous?retryWrites=true&w=majority', {
@@ -31,12 +33,10 @@ const connectDB = async () => {
 
 connectDB();
 
-app.get('/ride/:distance/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
+app.get('/ride/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
 
-
-  const { distance, startLatLng, endLatlng } = req.params;
-
-  const radius = distance / 6378.1;
+  const { startLatLng, endLatlng } = req.params;
+  const matchDrive = [];
 
   const [startLat, startLng] = startLatLng.split(',');
   const [endLat, endLng] = endLatlng.split(',');
@@ -44,23 +44,50 @@ app.get('/ride/:distance/:startLatLng/:endLatlng', catchAsync(async (req, res) =
   if (!startLat || !startLng || !endLat || !endLng) {
     next(
       new AppError(
-        'Please provide latitude and longitude in the format lat,lng.',
+        {
+          message: 'Please provide latitute and longitude in the format lat,lng.'
+        },
         400
       )
     );
   }
-  const drives = await DriveModel.find({
-    midPoint: { $geoWithin: { $centerSphere: [[startLng, startLat], radius] } },
-    midPoint: { $geoWithin: { $centerSphere: [[endLng, endLat], radius] } }
-  });
-  // 28.669786300050873, 77.22798035964927
 
-  console.log(drives.length);
+  //aroze=> min max modification required
+  const allDrives = await DriveModel.find({
+    active: true,
+    maxLat: { $gt: startLat },
+    minLat: { $lt: startLat },
+    maxLng: { $gt: startLng },
+    minLng: { $lt: startLng },
+
+    maxLat: { $gt: endLat },
+    minLat: { $lt: endLat },
+    maxLng: { $gt: endLng },
+    minLng: { $lt: endLng },
+  });
+
+  for (let i = 0; i < allDrives.length; i++) {
+    const drive = allDrives[i];
+    if (drive) {
+      for (let j = 0; j < drive.points.length; j++) {
+        const element = drive.points[j];
+        console.log(Math.abs(element.lat - startLat) < range, Math.abs(element.lng - startLng) < range);
+        if (Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range) {
+          matchDrive[matchDrive.length] = drive;
+          break;
+        }
+      }
+
+    }
+
+  }
+
+  console.log(allDrives.length, matchDrive.length);
   res.status(200).json({
     status: 'success',
-    results: drives.length,
+    results: matchDrive.length,
     data: {
-      data: drives
+      data: matchDrive
     }
   });
 })
@@ -72,26 +99,54 @@ app.post('/drive', catchAsync(async (req, res) => {
 
   const response = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${startPoint.coordinates[1]},${startPoint.coordinates[0]}&destination=${endPoint.coordinates[1]},${endPoint.coordinates[0]}&key=AIzaSyDVqR4uEmfJa-0jmqKjsariW3kJXbQh2Hk`);
 
-  const midPointIndex = Math.ceil((response.data.routes[0].legs[0].steps.length) / 2);
-  const midPoint = response.data.routes[0].legs[0].steps[midPointIndex].end_location;
-
-  const diameter = (response.data.routes[0].legs[0].distance.value) / 2;
   const route = response.data.routes[0];
 
+  let { northeast, southwest } = route.bounds;
+  let maxLat = southwest.lat;
+  let minLat = northeast.lat;
+  if (northeast.lat > southwest.lat) {
+    minLat = southwest.lat;
+    maxLat = northeast.lat;
+  }
+
+  let maxLng = southwest.lng;
+  let minLng = northeast.lng;
+  if (northeast.lng > southwest.lng) {
+    minLng = southwest.lng;
+    maxLng = northeast.lng;
+  }
+
+
+  let legs = route.legs[0].steps;
+  let points = [];
+  for (let index = 0; index < legs.length; index++) {
+    points[index] = {};
+    const element = legs[index];
+    points[index].min = Math.ceil(element.duration.value / 60);
+    points[index].lat = element.start_location.lat;
+    points[index].lng = element.start_location.lng;
+  }
+
+  console.log(points);
   const drive = await DriveModel.create({
     startPoint,
     endPoint,
-    midPoint: {
-      type: "Point",
-      coordinates: [midPoint.lng, midPoint.lat]
-    },
-    route,
-    diameter
+    minLat,
+    maxLat,
+    minLng,
+    maxLng,
+    points
   }
   );
-  console.log(drive.length);
+  // const drive = await DriveModel.create({...req.body});
+
+  //console.log(drive);
   res.status(200).json({ message: 'successfuly added drive' });
 }));
+
+app.use('/', (req, res) => {
+  res.status(200).send("MAD hi MAD :)");
+});
 
 /* const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
