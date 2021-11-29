@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongoURI=mongodb+srv://Safyan:qwertyasdf@cluster0-f9smh.mongodb.net/madbe?retryWrites=true&w=majority', {
+    await mongoose.connect('mongodb://localhost:27017/madbe', {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
@@ -33,12 +33,13 @@ const connectDB = async () => {
 
 connectDB();
 
-app.get('/ride/:distance/:startLatLng/:endLatlng',catchAsync(async (req,res)=>{
+app.get('/ride/:startLatLng/:endLatlng',catchAsync(async (req,res)=>{
   
 
-  const { distance, startLatLng, endLatlng } = req.params;
+  const {startLatLng, endLatlng } = req.params;
+  const matchDrive=[];
 
-  const radius = distance / 6378.1;
+  // const radius = distance / 6378.1;
 
   const [startLat, startLng] = startLatLng.split(',');
   const [endLat, endLng] = endLatlng.split(',');
@@ -46,16 +47,38 @@ app.get('/ride/:distance/:startLatLng/:endLatlng',catchAsync(async (req,res)=>{
   if (!startLat || !startLng || !endLat || !endLng ) {
     next(
       new AppError(
-        'Please provide latitutr and longitude in the format lat,lng.',
+        'Please provide latitute and longitude in the format lat,lng.',
         400
       )
     );
   }
-  const drives = await DriveModel.find({
-    midPoint: { $geoWithin: { $centerSphere: [[startLng, startLat], radius] } },
-    midPoint: { $geoWithin: { $centerSphere: [[endLng, endLat], radius] } }
+
+  //aroze=> min max modification required
+  const allDrives= await DriveModel.find({
+    active:true,
+    maxPoint:{$gt:startLat},
+    maxPoint:{$gt:startLat},
+    minPoint:{$gt:startLat},
+    minPoint:{$gt:startLat},
   });
-  // 28.669786300050873, 77.22798035964927
+  
+  for(let a=0;a<allDrives.length;a++){
+
+  // dont know if this find is required
+    const drive = await DriveModel.find({
+      _id:allDrives[a]._id,
+      midPoint: { $geoWithin: { $centerSphere: [[startLng, startLat], allDrives[a].radius] } },
+      midPoint: { $geoWithin: { $centerSphere: [[endLat, endLng], allDrives[a].radius] } },
+    });
+    if(drive){
+      //steps match form polyline 
+
+      //push to matched array
+      
+      // return a response
+    }
+    
+  }
 
   console.log(drives.length)
   res.status(200).json({
@@ -77,8 +100,16 @@ app.post('/drive',catchAsync(async (req,res)=>{
     const midPointIndex=Math.ceil((response.data.routes[0].legs[0].steps.length)/2);
     const midPoint=response.data.routes[0].legs[0].steps[midPointIndex].end_location;
 
-    const diameter = (response.data.routes[0].legs[0].distance.value)/2;
+    const diameter = ((response.data.routes[0].legs[0].distance.value)/2)/1000;
+    const radius = diameter / 6378.1;
     const route=response.data.routes[0];
+
+  const lineString ={
+    type:"LineString",
+    coordinates: [
+      [77.22798035964927,29.669786300050873],
+      [77.22798035964927,28.669786300050873 ]]
+    }
 
     const drive = await DriveModel.create({
       startPoint,
@@ -87,13 +118,28 @@ app.post('/drive',catchAsync(async (req,res)=>{
         type:"Point",
         coordinates:[midPoint.lng,midPoint.lat]
       },
+      maxPoint:{
+        type:"Point",
+        coordinates:[midPoint.lng + radius,midPoint.lat + radius]
+      },
+      minPoint:{
+        type:"Point",
+        coordinates:[midPoint.lng - radius,midPoint.lat - radius]
+      },
+      lineString,
       route,
-      diameter
+      radius
       }
     );
-    console.log(drive.length)
+    // const drive = await DriveModel.create({...req.body});
+
+    console.log(drive)
   res.status(200).send('successfuly added drive');
 }));
+
+app.use('/',(req,res)=>{
+  res.status(200).send("MAD hi MAD :)")
+})
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
