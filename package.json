@@ -2,11 +2,12 @@
     "name": "mad_be",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "app.js",
     "scripts": {
         "devsaf": "nodemon index.js",
         "dev": "nodemon app.js",
         "debug": "ndb app.js",
+        "test": "nodemon ./bin/www",
         "start": "node ./bin/www"
 
     },
