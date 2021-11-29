@@ -22,7 +22,9 @@ const driveSchema = new mongoose.Schema(
       type: Date,
       default: Date.now()
     },
-    DateTime: [Date],
+    dateTime: {
+      type: Date,
+    },
     active: {
       type: Boolean,
       default: true

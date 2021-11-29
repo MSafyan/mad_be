@@ -33,9 +33,9 @@ const connectDB = async () => {
 
 connectDB();
 
-app.get('/ride/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
+app.get('/ride/:time/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
 
-  const { startLatLng, endLatlng } = req.params;
+  const { time, startLatLng, endLatlng } = req.params;
   const matchDrive = [];
 
   const [startLat, startLng] = startLatLng.split(',');
@@ -66,20 +66,29 @@ app.get('/ride/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
     minLng: { $lt: endLng },
   });
 
+  let dateTime = new Date(time);
   for (let i = 0; i < allDrives.length; i++) {
     const drive = allDrives[i];
     if (drive) {
       let startIsIn = false;
+      let driveDetails = {};
       for (let j = 0; j < drive.points.length; j++) {
         const element = drive.points[j];
         if (!startIsIn) {
+          if (element.Time > dateTime)
+            continue;
           if (Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range) {
             startIsIn = true;
+            driveDetails = {
+              time: element.time,
+              startPoint: [element.lat, element.lng],
+            };
             continue;
           }
         }
         else if (Math.abs(element.lat - endLat) < range && Math.abs(element.lng - endLng) < range) {
-          matchDrive[matchDrive.length] = drive;
+          driveDetails.endPoint = [element.lat, element.lng];
+          matchDrive[matchDrive.length] = driveDetails;
           break;
         }
       }
@@ -100,7 +109,7 @@ app.get('/ride/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
 
 app.post('/drive', catchAsync(async (req, res) => {
 
-  const { startPoint, endPoint } = req.body;
+  const { date, startPoint, endPoint } = req.body;
 
   const response = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${startPoint.coordinates[1]},${startPoint.coordinates[0]}&destination=${endPoint.coordinates[1]},${endPoint.coordinates[0]}&key=AIzaSyDVqR4uEmfJa-0jmqKjsariW3kJXbQh2Hk`);
 
@@ -121,21 +130,25 @@ app.post('/drive', catchAsync(async (req, res) => {
     maxLng = northeast.lng;
   }
 
+  let dateTime = new Date(date).getTime();
+
+  let currentTimer = new Date(dateTime);
 
   let legs = route.legs[0].steps;
   let points = [];
   for (let index = 0; index < legs.length; index++) {
     points[index] = {};
     const element = legs[index];
-    points[index].min = Math.ceil(element.duration.value / 60);
+    currentTimer.setMinutes(currentTimer.getMinutes() + Math.ceil(element.duration.value / 60));
+    points[index].Time = new Date(currentTimer);
     points[index].lat = element.start_location.lat;
     points[index].lng = element.start_location.lng;
   }
 
-  console.log(points);
   const drive = await DriveModel.create({
     startPoint,
     endPoint,
+    dateTime,
     minLat,
     maxLat,
     minLng,
