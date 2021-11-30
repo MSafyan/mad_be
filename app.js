@@ -72,11 +72,12 @@ app.get('/ride/:time/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
     if (drive) {
       let startIsIn = false;
       let driveDetails = {};
+      console.log('checking new drive');
       for (let j = 0; j < drive.points.length; j++) {
         const element = drive.points[j];
         if (!startIsIn) {
-          console.log(element.Time, dateTime);
-          if (element.Time.getTime() > dateTime.getTime())
+          console.log(element.Time, dateTime, element.Time.getTime() < dateTime.getTime());
+          if (element.Time.getTime() < dateTime.getTime())
             continue;
           if (Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range) {
             startIsIn = true;
