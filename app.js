@@ -17,10 +17,12 @@ app.use(bodyParser.json());
 
 
 const range = 0.009009009009009;
+// mongodb://localhost:27017/test
+// mongoURI=mongodb+srv://Safyan:qwertyasdf@cluster0-f9smh.mongodb.net/natrous?retryWrites=true&w=majority
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongoURI=mongodb+srv://Safyan:qwertyasdf@cluster0-f9smh.mongodb.net/natrous?retryWrites=true&w=majority', {
+    await mongoose.connect('mongodb://localhost:27017/test', {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
@@ -33,9 +35,35 @@ const connectDB = async () => {
 
 connectDB();
 
-app.get('/ride/:time/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
+app.get('/rides/:startLat/:startLng/:endLat/:endLng',async (req,res)=>{
 
-  const { time, startLatLng, endLatlng } = req.params;
+  const { startLat, startLng, endLat,endLng } = req.params;
+
+  const allDrives = await DriveModel.find({
+    active: true,
+    maxLat: { $gt: startLat },
+    minLat: { $lt: startLat },
+    maxLng: { $gt: startLng },
+    minLng: { $lt: startLng },
+
+    maxLat: { $gt: endLat },
+    minLat: { $lt: endLat },
+    maxLng: { $gt: endLng },
+    minLng: { $lt: endLng },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: allDrives.length,
+    data: {
+      data: allDrives
+    }
+  });
+})
+
+app.post('/ride', catchAsync(async (req, res) => {
+
+  const { time, startLatLng, endLatlng,name } = req.body;
   const matchDrive = [];
 
   const [startLat, startLng] = startLatLng.split(',');
@@ -51,6 +79,13 @@ app.get('/ride/:time/:startLatLng/:endLatlng', catchAsync(async (req, res) => {
       )
     );
   }
+
+  await RideModel.create({
+    name,
+    time,
+    startLatLng, 
+    endLatlng
+  });
 
   //aroze=> min max modification required
   const allDrives = await DriveModel.find({
@@ -156,8 +191,8 @@ app.post('/drive', catchAsync(async (req, res) => {
     minLng,
     maxLng,
     points
-  }
-  );
+  });
+
   // const drive = await DriveModel.create({...req.body});
 
   //console.log(drive);
