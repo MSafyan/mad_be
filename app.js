@@ -168,10 +168,5 @@ app.use('/', (req, res) => {
   res.status(200).send("MAD hi MAD :)");
 });
 
-/* const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Running at ${PORT}`);
-});
- */
+
 module.exports = app;
