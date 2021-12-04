@@ -15,22 +15,11 @@ const mongoose = require('mongoose');
 
 const rideSchema = new mongoose.Schema(
   {
-    diameter: {
-      type: Number,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now()
-    },
-    DateTime: {
+    time: {
       type:[Date],
       default:"2021-06-19T09:00:00.000Z"
     },
-    active: {
-      type: Boolean,
-      default: true
-    },
-    startPoint: {
+    startLatLng: {
       type: {
         type: String, // Don't do `{ location: { type: String } }`
         enum: ['Point'], // 'location.type' must be 'Point'
@@ -38,7 +27,7 @@ const rideSchema = new mongoose.Schema(
       },
       coordinates: [Number]
     },
-    endPoint: {
+    endLatlng: {
       type: {
         type: String, // Don't do `{ location: { type: String } }`
         enum: ['Point'], // 'location.type' must be 'Point'
@@ -46,20 +35,11 @@ const rideSchema = new mongoose.Schema(
       },
       coordinates: [Number]
     },
-    midPoint:{
-      type: {
-        type: String, // Don't do `{ location: { type: String } }`
-        enum: ['Point'], // 'location.type' must be 'Point'
-        default:'Point'
-      },
-      coordinates: [Number]
-    },
-    route:{}
+    name:String
   }
 );
 
-rideSchema.index({startPoint: '2dsphere'});
-rideSchema.index({midPoint: '2dsphere'});
-rideSchema.index({endPoint: '2dsphere'});
+rideSchema.index({endLatlng: '2dsphere'});
+rideSchema.index({startLatLng: '2dsphere'});
 
 module.exports = mongoose.model('Ride', rideSchema);
