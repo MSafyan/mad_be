@@ -1,23 +1,7 @@
 const mongoose = require('mongoose');
-const { Point } = require('mongoose-geojson-schema');
-
-const pointSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ['Point'],
-    required: true
-  },
-  coordinates: {
-    type: [Number],
-    required: true
-  }
-});
 
 const driveSchema = new mongoose.Schema(
   {
-    radius: {
-      type: Number,
-    },
     createdAt: {
       type: Date,
       default: Date.now()
