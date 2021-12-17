@@ -137,10 +137,12 @@ app.post('/ride/find', catchAsync(async (req, res) => {
         for (let j = 0; j < drive.points.length; j++) {
           const element = drive.points[j];
           if (!startIsIn) {
-            console.log(element.Time, dateTime, element.Time.getTime() < dateTime.getTime());
-            if (element.Time.getTime() < dateTime.getTime())
+            console.log(element.Time, dateTime, element.Time.getTime() > dateTime.getTime());
+            if (element.Time.getTime() > dateTime.getTime())
               continue;
+            console.log(Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range);
             if (Math.abs(element.lat - startLat) < range && Math.abs(element.lng - startLng) < range) {
+              console.log("Start found");
               startIsIn = true;
               driveDetails = {
                 time: element.Time,
@@ -150,6 +152,7 @@ app.post('/ride/find', catchAsync(async (req, res) => {
             }
           }
           else if (Math.abs(element.lat - endLat) < range && Math.abs(element.lng - endLng) < range) {
+            console.log("End found");
             driveDetails.endPoint = [element.lat, element.lng];
             matchDrive[matchDrive.length] = driveDetails;
             break;
