@@ -131,6 +131,7 @@ app.post('/ride/find', catchAsync(async (req, res) => {
   for (let i = 0; i < allDrives.length; i++) {
     const drive = allDrives[i];
     if (drive) {
+      console.log(dateTime, drive.dateTime, sameDay(dateTime, drive.dateTime));
       if (sameDay(dateTime, drive.dateTime)) {
         let startIsIn = false;
         let driveDetails = {};
